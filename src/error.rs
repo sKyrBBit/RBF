@@ -91,7 +91,7 @@ impl StdError for InterpreterError {
     use super::interpreter::InterpreterErrorKind::*;
     match self.value {
       InvalidArguments => "invalid arguments",
-	    DivisionByZero   => "division by zero",
+      DivisionByZero   => "division by zero",
       CarNotApplicable => "car not applicable",
     }
   }

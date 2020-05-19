@@ -36,6 +36,8 @@ impl Interpreter {
           Lt     => Ok(Data::symbol("lt", expr.loc)),
           And    => Ok(Data::symbol("and", expr.loc)),
           Or     => Ok(Data::symbol("or", expr.loc)),
+          Not    => Ok(Data::symbol("not", expr.loc)),
+          Xor    => Ok(Data::symbol("xor", expr.loc)),
         }
       },
       Pair  { l, r } => {
@@ -58,13 +60,15 @@ impl Interpreter {
               "lt"    => Data::lt(args), 
               "and"   => Data::and(args),
               "or"    => Data::or(args),
+              "not"   => Data::not(args),
+              "xor"   => Data::xor(args),
               _       => Err(InterpreterError::new(InterpreterErrorKind::CarNotApplicable, expr.loc)),
             }
           },
           _ => Err(InterpreterError::new(InterpreterErrorKind::CarNotApplicable, expr.loc)),
         }
       }
-  	  Quote { q } => {
+      Quote { q } => {
         match q.value {
           Num(n)                 => Ok(Data::num(n as i32, expr.loc)),
           Nil                    => Ok(Data::nil(expr.loc)),
@@ -73,7 +77,7 @@ impl Interpreter {
           Quote { ref q }        => Ok(self.eval(q)?),
         }
       },
-	  }
+    }
   }
 }
 

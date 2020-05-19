@@ -98,6 +98,9 @@ impl Data {
       let loc = args[0].loc;
       match (&args[0].value, &args[1].value) {
         (Num(l), Num(r)) => Ok(Self::boolean(l == r, loc)),
+        (Boolean(l), Boolean(r)) => Ok(Self::boolean(l == r, loc)),
+        (Nil, Nil) => Ok(Self::boolean(true, loc)),
+        (Nil, _) | (_, Nil) => Ok(Self::boolean(false, loc)),
         _ => Err(Annot::new(InvalidArguments, loc)),
       }
     } else {
@@ -120,6 +123,7 @@ impl Data {
       let loc = args[0].loc;
       match (&args[0].value, &args[1].value) {
         (Num(l), Num(r)) => Ok(Self::num(l & r, loc)),
+        (Boolean(l), Boolean(r)) => Ok(Self::boolean(l & r, loc)),
         _ => Err(Annot::new(InvalidArguments, loc)),
       }
     } else {
@@ -129,8 +133,33 @@ impl Data {
   pub fn or(args: Vec<Data>) -> Result<Data, InterpreterError> {
     if args.len() == 2 {
       let loc = args[0].loc;
-      match (&args[0].value, &&args[1].value) {
+      match (&args[0].value, &args[1].value) {
         (Num(l), Num(r)) => Ok(Self::num(l | r, loc)),
+        (Boolean(l), Boolean(r)) => Ok(Self::boolean(l | r, loc)),
+        _ => Err(Annot::new(InvalidArguments, loc)),
+      }
+    } else {
+      Err(Annot::new(InvalidArguments, Loc(0, 1)))
+    }
+  }
+  pub fn not(args: Vec<Data>) -> Result<Data, InterpreterError> {
+    if args.len() == 1 {
+      let loc = args[0].loc;
+      match &args[0].value {
+        Num(n) => Ok(Self::num(!n, loc)),
+        Boolean(b) => Ok(Self::boolean(!b, loc)),
+        _ => Err(Annot::new(InvalidArguments, loc)),
+      }
+    } else {
+      Err(Annot::new(InvalidArguments, Loc(0, 1)))
+    }
+  }
+  pub fn xor(args: Vec<Data>) -> Result<Data, InterpreterError> {
+    if args.len() == 2 {
+      let loc = args[0].loc;
+      match (&args[0].value, &args[1].value) {
+        (Num(l), Num(r)) => Ok(Self::num(l ^ r, loc)),
+        (Boolean(l), Boolean(r)) => Ok(Self::boolean(l ^ r, loc)),
         _ => Err(Annot::new(InvalidArguments, loc)),
       }
     } else {

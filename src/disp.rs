@@ -20,8 +20,10 @@ impl fmt::Display for TokenKind {
       Equal => write!(f, "="),
       And => write!(f, "&"),
       Or => write!(f, "|"),
+      Not => write!(f, "!"),
+      Xor => write!(f, "^"),
       Quote => write!(f, "'"),
-      dot => write!(f, "."),
+      Dot => write!(f, "."),
       Greater => write!(f, ">"),
       LParen => write!(f, "("),
       RParen => write!(f, ")"),
@@ -83,7 +85,7 @@ impl fmt::Display for InterpreterError {
     use super::interpreter::InterpreterErrorKind::*;
     match self.value {
       InvalidArguments => write!(f, "invalid arguments"),
-	    DivisionByZero   => write!(f, "division by zero"),
+      DivisionByZero   => write!(f, "division by zero"),
       CarNotApplicable => write!(f, "car not applicable"),
     }
   }

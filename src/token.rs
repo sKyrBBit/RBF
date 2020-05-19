@@ -12,6 +12,8 @@ pub enum TokenKind {
   Greater,
   And,
   Or,
+  Not,
+  Xor,
   Quote,
   Dot,
   LParen,
@@ -54,6 +56,12 @@ impl Token {
   }
   pub fn or(loc: Loc) -> Self {
     Self::new(TokenKind::Or, loc)
+  }
+  pub fn not(loc: Loc) -> Self {
+    Self::new(TokenKind::Not, loc)
+  }
+  pub fn xor(loc: Loc) -> Self {
+    Self::new(TokenKind::Xor, loc)
   }
   pub fn quote(loc: Loc) -> Self {
     Self::new(TokenKind::Quote, loc)

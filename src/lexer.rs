@@ -77,11 +77,17 @@ fn lex_and(input: &[u8], start: usize) -> Result<(Token, usize), LexError> {
 fn lex_or(input: &[u8], start: usize) -> Result<(Token, usize), LexError> {
   consume_byte(input, start, b'|').map(|(_, end)| (Token::or(Loc(start, end)), end))
 }
+fn lex_not(input: &[u8], start: usize) -> Result<(Token, usize), LexError> {
+  consume_byte(input, start, b'!').map(|(_, end)| (Token::not(Loc(start, end)), end))
+}
+fn lex_xor(input: &[u8], start: usize) -> Result<(Token, usize), LexError> {
+  consume_byte(input, start, b'^').map(|(_, end)| (Token::xor(Loc(start, end)), end))
+}
 fn lex_quote(input: &[u8], start: usize) -> Result<(Token, usize), LexError> {
   consume_byte(input, start, b'\'').map(|(_, end)| (Token::quote(Loc(start, end)), end))
 }
 fn lex_dot(input: &[u8], start: usize) -> Result<(Token, usize), LexError> {
-	consume_byte(input, start, b'.').map(|(_, end)| (Token::dot(Loc(start, end)), end))
+  consume_byte(input, start, b'.').map(|(_, end)| (Token::dot(Loc(start, end)), end))
   }
 fn lex_lparen(input: &[u8], start: usize) -> Result<(Token, usize), LexError> {
   consume_byte(input, start, b'(').map(|(_, end)| (Token::lparen(Loc(start, end)), end))
@@ -127,9 +133,11 @@ pub fn lex(input: &str) -> Result<Vec<Token>, LexError> {
       b'=' => lex_a_token!(lex_equal(input, pos)),
       b'>' => lex_a_token!(lex_greater(input, pos)),
       b'&' => lex_a_token!(lex_and(input, pos)),
-	  b'|' => lex_a_token!(lex_or(input, pos)),
-	  b'\'' => lex_a_token!(lex_quote(input, pos)),
-	  b'.' => lex_a_token!(lex_dot(input, pos)),
+      b'|' => lex_a_token!(lex_or(input, pos)),
+      b'!' => lex_a_token!(lex_not(input, pos)),
+      b'^' => lex_a_token!(lex_xor(input, pos)),
+      b'\'' => lex_a_token!(lex_quote(input, pos)),
+      b'.' => lex_a_token!(lex_dot(input, pos)),
       b'(' => lex_a_token!(lex_lparen(input, pos)),
       b')' => lex_a_token!(lex_rparen(input, pos)),
       // b'{' => lex_a_token!(lex_lbrace(input, pos)),

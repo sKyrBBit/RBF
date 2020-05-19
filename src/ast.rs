@@ -11,6 +11,8 @@ pub enum OpKind {
   Gt,
   And,
   Or,
+  Not,
+  Xor,
 }
 
 pub type Op = Annot<OpKind>;
@@ -42,6 +44,12 @@ impl Op {
   }
   pub fn or(loc: Loc) -> Self {
     Self::new(OpKind::Or, loc)
+  }
+  pub fn not(loc: Loc) -> Self {
+    Self::new(OpKind::Not, loc)
+  }
+  pub fn xor(loc: Loc) -> Self {
+    Self::new(OpKind::Xor, loc)
   }
 }
 
