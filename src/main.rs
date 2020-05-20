@@ -12,11 +12,11 @@ fn prompt(s: &str) -> io::Result<()> {
   stdout.flush()
 }
 
-fn interpret(line: &str, interpreter: &mut Interpreter) {
-  let ast = match line.parse::<Ast>() {
+fn interpret(input: &str, interpreter: &mut Interpreter) {
+  let ast = match input.parse::<Ast>() {
     Ok(ast) => ast,
     Err(e) => {
-      e.show_diagnostic(&line);
+      e.show_diagnostic(&input);
       show_trace(e);
       return
     }
@@ -25,7 +25,7 @@ fn interpret(line: &str, interpreter: &mut Interpreter) {
   match interpreter.eval(&ast) {
     Ok(result) => println!("{}", result),
     Err(e) => {
-      e.show_diagnostic(&line);
+      e.show_diagnostic(&input);
       show_trace(e);
     }
   };
@@ -75,6 +75,10 @@ use rlisp::interpreter::Interpreter;
     _interpret("true", &mut interpreter);
     _interpret("a", &mut interpreter);
     _interpret("!", &mut interpreter);
+    _interpret("(atom 1)", &mut interpreter);
+    _interpret("(atom true)", &mut interpreter);
+    _interpret("(atom a)", &mut interpreter);
+    _interpret("(atom !)", &mut interpreter);
   }
   #[test]
   fn quote() {
@@ -91,6 +95,18 @@ use rlisp::interpreter::Interpreter;
     _interpret("'(true . false)", &mut interpreter);
     _interpret("'(a . b)", &mut interpreter);
     _interpret("'(& . |)", &mut interpreter);
+    _interpret("(car '(1 . 2))", &mut interpreter);
+    _interpret("(car '(true . false))", &mut interpreter);
+    _interpret("(car '(a . b))", &mut interpreter);
+    _interpret("(car '(& . |))", &mut interpreter);
+    _interpret("(cdr '(1 . 2))", &mut interpreter);
+    _interpret("(cdr '(true . false))", &mut interpreter);
+    _interpret("(cdr '(a . b))", &mut interpreter);
+    _interpret("(cdr '(& . |))", &mut interpreter);
+    _interpret("(cons 1 2)", &mut interpreter);
+    _interpret("(cons true false)", &mut interpreter);
+    _interpret("(cons a b)", &mut interpreter);
+    _interpret("(cons & |)", &mut interpreter);
   }
   #[test]
   fn list() {

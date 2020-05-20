@@ -173,4 +173,48 @@ impl Data {
       Err(Annot::new(InvalidArguments, Loc(0, 1)))
     }
   }
+  pub fn atom(args: Vec<Data>) -> Result<Data, InterpreterError> {
+    if args.len() == 1 {
+      let loc = args[0].loc;
+      match &args[0].value {
+        Number(_) |
+        Boolean(_) |
+        Nil |
+        Symbol(_) => Ok(Self::boolean(true, loc)),
+        _ => Ok(Self::boolean(false, loc)),
+      }
+    } else {
+      Err(Annot::new(InvalidArguments, Loc(0, 1)))
+    }
+  }
+  pub fn car(args: Vec<Data>) -> Result<Data, InterpreterError> {
+    if args.len() == 1 {
+      let loc = args[0].loc;
+      match &args[0].value {
+        Pair(l, _) => Ok((**l).clone()),
+        _ => Err(Annot::new(InvalidArguments, loc)),
+      }
+    } else {
+      Err(Annot::new(InvalidArguments, Loc(0, 1)))
+    }
+  }
+  pub fn cdr(args: Vec<Data>) -> Result<Data, InterpreterError> {
+    if args.len() == 1 {
+      let loc = args[0].loc;
+      match &args[0].value {
+        Pair(_, r) => Ok((**r).clone()),
+        _ => Err(Annot::new(InvalidArguments, loc)),
+      }
+    } else {
+      Err(Annot::new(InvalidArguments, Loc(0, 1)))
+    }
+  }
+  pub fn cons(args: Vec<Data>) -> Result<Data, InterpreterError> {
+    if args.len() == 2 {
+      let loc = args[0].loc;
+      Ok(Data::pair(args[0].clone(), args[1].clone(), loc))
+    } else {
+      Err(Annot::new(InvalidArguments, Loc(0, 1)))
+    }
+  }
 }

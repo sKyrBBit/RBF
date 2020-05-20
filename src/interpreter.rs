@@ -37,18 +37,22 @@ impl Interpreter {
               .map(|arg| arg.unwrap())
               .collect::<Vec<Data>>();
             match &*name {
-              // operator         
+              // builtin function
               "add"   => Data::add(args),
               "sub"   => Data::sub(args),
               "mul"   => Data::mul(args),
               "div"   => Data::div(args),
-              "gt"    => Data::gt(args), 
+              "gt"    => Data::gt(args),
               "equal" => Data::equal(args),
-              "lt"    => Data::lt(args), 
+              "lt"    => Data::lt(args),
               "and"   => Data::and(args),
               "or"    => Data::or(args),
               "not"   => Data::not(args),
               "xor"   => Data::xor(args),
+              "atom"  => Data::atom(args),
+              "car"   => Data::car(args),
+              "cdr"   => Data::cdr(args),
+			        "cons"  => Data::cons(args),
               // keyword
               "true"  => Ok(Data::boolean(true, expr.loc)),
               "false" => Ok(Data::boolean(false, expr.loc)),
