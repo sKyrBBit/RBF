@@ -56,6 +56,7 @@ impl Op {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AstKind {
   Num(u32),
+  Sym(Box<str>),
   Op    { op: Op },
   Nil,
   Pair  { l: Box<Ast>, r: Box<Ast> },
@@ -67,6 +68,10 @@ pub type Ast = Annot<AstKind>;
 impl Ast {
   pub fn num(n: u32, loc: Loc) -> Self {
     Self::new(AstKind::Num(n), loc)
+  }
+
+  pub fn sym(s: Box<str>, loc: Loc) -> Self {
+    Self::new(AstKind::Sym(s), loc)
   }
 
   pub fn op(op: Op, loc: Loc) -> Self {

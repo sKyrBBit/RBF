@@ -1,8 +1,9 @@
 use super::{Loc, Annot};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum TokenKind {
   Number(u32),
+  Symbol(Box<str>),
   Plus,
   Minus,
   Asterisk,
@@ -29,6 +30,9 @@ pub type Token = Annot<TokenKind>;
 impl Token {
   pub fn number(n: u32, loc: Loc) -> Self {
     Self::new(TokenKind::Number(n), loc)
+  }
+  pub fn symbol(s: &str, loc: Loc) -> Self {
+    Self::new(TokenKind::Symbol(Box::from(s)), loc)
   }
   pub fn plus(loc: Loc) -> Self {
     Self::new(TokenKind::Plus, loc)

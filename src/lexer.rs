@@ -50,6 +50,15 @@ fn lex_number(input: &[u8], pos: usize) -> Result<(Token, usize), LexError> {
     .unwrap();
   Ok((Token::number(n, Loc(start, end)), end))
 }
+fn lex_symbol(input: &[u8], pos: usize) -> Result<(Token, usize), LexError> {
+  use std::str::from_utf8;
+
+  let start = pos;
+  let end = recognize_many(input, start, |b| b"1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_".contains(&b));
+  let s = from_utf8(&input[start..end])
+    .unwrap();
+  Ok((Token::symbol(s, Loc(start, end)), end))
+}
 fn lex_plus(input: &[u8], start: usize) -> Result<(Token, usize), LexError> {
   consume_byte(input, start, b'+').map(|(_, end)| (Token::plus(Loc(start, end)), end))
 }
@@ -125,6 +134,7 @@ pub fn lex(input: &str) -> Result<Vec<Token>, LexError> {
   while pos < input.len() {
     match input[pos] {
       b'0'..=b'9' => lex_a_token!(lex_number(input, pos)),
+      b'a'..=b'z' | b'A'..=b'Z' => lex_a_token!(lex_symbol(input, pos)),
       b'+' => lex_a_token!(lex_plus(input, pos)),
       b'-' => lex_a_token!(lex_minus(input, pos)),
       b'*' => lex_a_token!(lex_asterisk(input, pos)),

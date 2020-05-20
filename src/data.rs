@@ -4,19 +4,20 @@ use super::interpreter::InterpreterErrorKind::*;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum DataKind {
-  Num(i32),
+  Number(i32),
   Boolean(bool),
   Nil,
   Symbol(Box<str>),
+  Pair(Box<Data>, Box<Data>),
 }
 
 pub type Data = Annot<DataKind>;
 use DataKind::*;
 
 impl Data {
-  pub fn num(n: i32, loc: Loc) -> Self {
+  pub fn number(n: i32, loc: Loc) -> Self {
     Data::new (
-      Num(n),
+      Number(n),
       loc,
     )
   }
@@ -38,11 +39,17 @@ impl Data {
       loc,
     )
   }
+  pub fn pair(l: Data, r: Data, loc: Loc) -> Self {
+    Data::new (
+      Pair(Box::from(l), Box::from(r)),
+      loc,
+    )
+  }
   pub fn add(args: Vec<Data>) -> Result<Data, InterpreterError> {
     if args.len() == 2 {
       let loc = args[0].loc;
       match (&args[0].value, &args[1].value) {
-        (Num(l), Num(r)) => Ok(Self::num(l + r, loc)),
+        (Number(l), Number(r)) => Ok(Self::number(l + r, loc)),
         _ => Err(Annot::new(InvalidArguments, loc)),
       }
     } else {
@@ -53,7 +60,7 @@ impl Data {
     if args.len() == 2 {
       let loc = args[0].loc;
       match (&args[0].value, &args[1].value) {
-        (Num(l), Num(r)) => Ok(Self::num(l - r, loc)),
+        (Number(l), Number(r)) => Ok(Self::number(l - r, loc)),
         _ => Err(Annot::new(InvalidArguments, loc)),
       }
     } else {
@@ -64,7 +71,7 @@ impl Data {
     if args.len() == 2 {
       let loc = args[0].loc;
       match (&args[0].value, &args[1].value) {
-        (Num(l), Num(r)) => Ok(Self::num(l * r, loc)),
+        (Number(l), Number(r)) => Ok(Self::number(l * r, loc)),
         _ => Err(Annot::new(InvalidArguments, loc)),
       }
     } else {
@@ -75,7 +82,7 @@ impl Data {
     if args.len() == 2 {
       let loc = args[0].loc;
       match (&args[0].value, &args[1].value) {
-        (Num(l), Num(r)) => Ok(Self::num(l / r, loc)),
+        (Number(l), Number(r)) => Ok(Self::number(l / r, loc)),
         _ => Err(Annot::new(InvalidArguments, loc)),
       }
     } else {
@@ -86,7 +93,7 @@ impl Data {
     if args.len() == 2 {
       let loc = args[0].loc;
       match (&args[0].value, &args[1].value) {
-        (Num(l), Num(r)) => Ok(Self::boolean(l > r, loc)),
+        (Number(l), Number(r)) => Ok(Self::boolean(l > r, loc)),
         _ => Err(Annot::new(InvalidArguments, loc)),
       }
     } else {
@@ -97,7 +104,7 @@ impl Data {
     if args.len() == 2 {
       let loc = args[0].loc;
       match (&args[0].value, &args[1].value) {
-        (Num(l), Num(r)) => Ok(Self::boolean(l == r, loc)),
+        (Number(l), Number(r)) => Ok(Self::boolean(l == r, loc)),
         (Boolean(l), Boolean(r)) => Ok(Self::boolean(l == r, loc)),
         (Nil, Nil) => Ok(Self::boolean(true, loc)),
         (Nil, _) | (_, Nil) => Ok(Self::boolean(false, loc)),
@@ -111,7 +118,7 @@ impl Data {
     if args.len() == 2 {
       let loc = args[0].loc;
       match (&args[0].value, &args[1].value) {
-        (Num(l), Num(r)) => Ok(Self::boolean(l < r, loc)),
+        (Number(l), Number(r)) => Ok(Self::boolean(l < r, loc)),
         _ => Err(Annot::new(InvalidArguments, loc)),
       }
     } else {
@@ -122,7 +129,7 @@ impl Data {
     if args.len() == 2 {
       let loc = args[0].loc;
       match (&args[0].value, &args[1].value) {
-        (Num(l), Num(r)) => Ok(Self::num(l & r, loc)),
+        (Number(l), Number(r)) => Ok(Self::number(l & r, loc)),
         (Boolean(l), Boolean(r)) => Ok(Self::boolean(l & r, loc)),
         _ => Err(Annot::new(InvalidArguments, loc)),
       }
@@ -134,7 +141,7 @@ impl Data {
     if args.len() == 2 {
       let loc = args[0].loc;
       match (&args[0].value, &args[1].value) {
-        (Num(l), Num(r)) => Ok(Self::num(l | r, loc)),
+        (Number(l), Number(r)) => Ok(Self::number(l | r, loc)),
         (Boolean(l), Boolean(r)) => Ok(Self::boolean(l | r, loc)),
         _ => Err(Annot::new(InvalidArguments, loc)),
       }
@@ -146,7 +153,7 @@ impl Data {
     if args.len() == 1 {
       let loc = args[0].loc;
       match &args[0].value {
-        Num(n) => Ok(Self::num(!n, loc)),
+        Number(n) => Ok(Self::number(!n, loc)),
         Boolean(b) => Ok(Self::boolean(!b, loc)),
         _ => Err(Annot::new(InvalidArguments, loc)),
       }
@@ -158,7 +165,7 @@ impl Data {
     if args.len() == 2 {
       let loc = args[0].loc;
       match (&args[0].value, &args[1].value) {
-        (Num(l), Num(r)) => Ok(Self::num(l ^ r, loc)),
+        (Number(l), Number(r)) => Ok(Self::number(l ^ r, loc)),
         (Boolean(l), Boolean(r)) => Ok(Self::boolean(l ^ r, loc)),
         _ => Err(Annot::new(InvalidArguments, loc)),
       }

@@ -1,4 +1,4 @@
-use super::Annot;
+use super::{Loc, Annot};
 use super::ast::Ast;
 use super::data::Data;
 use super::error::print_annot;
@@ -22,35 +22,22 @@ impl Interpreter {
   pub fn eval(&mut self, expr: &Ast) -> Result<Data, InterpreterError> {
     use super::ast::AstKind::*;
     match &expr.value {
-      Num(n) => Ok(Data::num(*n as i32, expr.loc)),
+      Num(n) => Ok(Data::number(*n as i32, expr.loc)),
+      Sym(s) => Ok(Data::symbol(s, expr.loc)),
       Nil => Ok(Data::nil(expr.loc)),
-      Op { ref op } => {
-        use super::ast::OpKind::*;
-        match op.value {
-          Add    => Ok(Data::symbol("add", expr.loc)),
-          Sub    => Ok(Data::symbol("sub", expr.loc)),
-          Mul    => Ok(Data::symbol("mul", expr.loc)),
-          Div    => Ok(Data::symbol("div", expr.loc)),
-          Gt     => Ok(Data::symbol("gt", expr.loc)),
-          Equal  => Ok(Data::symbol("equal", expr.loc)),
-          Lt     => Ok(Data::symbol("lt", expr.loc)),
-          And    => Ok(Data::symbol("and", expr.loc)),
-          Or     => Ok(Data::symbol("or", expr.loc)),
-          Not    => Ok(Data::symbol("not", expr.loc)),
-          Xor    => Ok(Data::symbol("xor", expr.loc)),
-        }
-      },
+      Op { ref op } => Ok(symbolize(&op.value, expr.loc)),
       Pair  { l, r } => {
         let car = self.eval(&l)?;
         use super::data::DataKind::*;
         match car.value {
           Symbol(name) => {
             let args = vec_args(r.clone())?;
-            let args = args.into_iter().map(|arg| self.eval(&*arg))
+            let args = args.into_iter().map(|arg| self.eval(&arg))
               .filter(|arg| arg.is_ok())
               .map(|arg| arg.unwrap())
               .collect::<Vec<Data>>();
             match &*name {
+              // operator         
               "add"   => Data::add(args),
               "sub"   => Data::sub(args),
               "mul"   => Data::mul(args),
@@ -62,21 +49,17 @@ impl Interpreter {
               "or"    => Data::or(args),
               "not"   => Data::not(args),
               "xor"   => Data::xor(args),
+              // keyword
+              "true"  => Ok(Data::boolean(true, expr.loc)),
+              "false" => Ok(Data::boolean(false, expr.loc)),
+              "nil"   => Ok(Data::nil(expr.loc)),
               _       => Err(InterpreterError::new(InterpreterErrorKind::CarNotApplicable, expr.loc)),
             }
           },
           _ => Err(InterpreterError::new(InterpreterErrorKind::CarNotApplicable, expr.loc)),
         }
       }
-      Quote { q } => {
-        match q.value {
-          Num(n)                 => Ok(Data::num(n as i32, expr.loc)),
-          Nil                    => Ok(Data::nil(expr.loc)),
-          Op { ref op }          => Ok(Data::symbol(&format!("{:?}", op), expr.loc)),
-          Pair { ref l, ref r }  => unimplemented!(),
-          Quote { ref q }        => Ok(self.eval(q)?),
-        }
-      },
+      Quote { q } => Ok(quote(&q, expr.loc)),
     }
   }
 }
@@ -102,5 +85,37 @@ fn vec_args(args: Box<Ast>) -> Result<Vec<Box<Ast>>, InterpreterError>{
         return Ok(vec_args);
       },
     }
+  }
+}
+
+use super::ast::OpKind;
+fn symbolize(kind: &OpKind, loc: Loc) -> Data {
+  use OpKind::*;
+  match kind {
+    Add    => Data::symbol("add", loc),
+    Sub    => Data::symbol("sub", loc),
+    Mul    => Data::symbol("mul", loc),
+    Div    => Data::symbol("div", loc),
+    Gt     => Data::symbol("gt", loc),
+    Equal  => Data::symbol("equal", loc),
+    Lt     => Data::symbol("lt", loc),
+    And    => Data::symbol("and", loc),
+    Or     => Data::symbol("or", loc),
+    Not    => Data::symbol("not", loc),
+    Xor    => Data::symbol("xor", loc),
+  }
+}
+
+fn quote(ast: &Ast, loc: Loc) -> Data {
+  use super::ast::AstKind::*;
+  match ast.value {
+    Num(n)         => Data::number(n as i32, loc),
+    Sym(ref s)     => Data::symbol(&*s, loc),
+    Nil            => Data::nil(loc),
+    Op { ref op }  => symbolize(&op.value, loc),
+    Pair { ref l, ref r }  => {
+      Data::pair(quote(&l, l.loc), quote(&r, r.loc), loc)
+    },
+    Quote { ref q } => quote(&q, q.loc),
   }
 }

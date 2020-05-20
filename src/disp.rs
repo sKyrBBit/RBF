@@ -11,7 +11,8 @@ impl fmt::Display for TokenKind {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     use self::TokenKind::*;
     match self {
-      Number(n) => n.fmt(f),
+      Number(n) => write!(f, "{}", n),
+      Symbol(s) => write!(f, "{}", s),
       Plus => write!(f, "+"),
       Minus => write!(f, "-"),
       Asterisk => write!(f, "*"),
@@ -95,10 +96,11 @@ impl fmt::Display for Data {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     use super::data::DataKind::*;
     match self.value {
-      Num(n) => write!(f, "{}", n),
+      Number(n) => write!(f, "{}", n),
       Boolean(b) => write!(f, "{}", b),
       Nil => write!(f, "()"),
-      Symbol(ref name) => write!(f, "{}", name),
+	  Symbol(ref name) => write!(f, "{}", name),
+	  Pair(ref l, ref r) => write!(f, "({} . {})", l, r),
     }
   }
 }
