@@ -93,6 +93,7 @@ impl StdError for InterpreterError {
       InvalidArguments => "invalid arguments",
       DivisionByZero   => "division by zero",
       CarNotApplicable => "car not applicable",
+      SymbolNotFound   => "symbol not found",
     }
   }
 }

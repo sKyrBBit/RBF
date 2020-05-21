@@ -2,21 +2,27 @@ use super::{Loc, Annot};
 use super::ast::Ast;
 use super::data::Data;
 use super::error::print_annot;
+use std::collections::HashMap;
 
-pub struct Interpreter;
+pub struct Interpreter {
+  pub symbols: HashMap<Box<str>, Data>
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum InterpreterErrorKind {
   InvalidArguments,
   DivisionByZero,
   CarNotApplicable,
+  SymbolNotFound,
 }
 
 pub type InterpreterError = Annot<InterpreterErrorKind>;
 
 impl Interpreter {
   pub fn new() -> Self {
-    Interpreter
+    Interpreter {
+      symbols: HashMap::with_capacity(32),
+    }
   }
 
   pub fn eval(&mut self, expr: &Ast) -> Result<Data, InterpreterError> {
@@ -29,7 +35,10 @@ impl Interpreter {
           "true"  => Ok(Data::boolean(true, expr.loc)),
           "false" => Ok(Data::boolean(false, expr.loc)),
           "nil"   => Ok(Data::nil(expr.loc)),
-          _ => Ok(Data::symbol(s, expr.loc))
+          _       => Ok(self.symbols
+                       .get(s)
+                       .map(|d| d.clone())
+                       .unwrap_or(Data::symbol(s, expr.loc))),
         }
       },
       Nil => Ok(Data::nil(expr.loc)),
@@ -46,38 +55,34 @@ impl Interpreter {
               .collect::<Vec<Data>>();
             match &*s {
               // builtin function
-              "add"   => Data::add(args),
-              "sub"   => Data::sub(args),
-              "mul"   => Data::mul(args),
-              "div"   => Data::div(args),
-              "rem"   => Data::rem(args),
-              "gt"    => Data::gt(args),
-              "ge"    => Data::ge(args),
-              "eq"    => Data::eq(args),
-              "ne"    => Data::ne(args),
-              "lt"    => Data::lt(args),
-              "le"    => Data::le(args),
-              "and"   => Data::and(args),
-              "or"    => Data::or(args),
-              "not"   => Data::not(args),
-              "xor"   => Data::xor(args),
-              "atom"  => Data::atom(args),
-              "if"    => Data::_if(args),
+              "add"    => Data::add(args),
+              "sub"    => Data::sub(args),
+              "mul"    => Data::mul(args),
+              "div"    => Data::div(args),
+              "rem"    => Data::rem(args),
+              "gt"     => Data::gt(args),
+              "ge"     => Data::ge(args),
+              "eq"     => Data::eq(args),
+              "ne"     => Data::ne(args),
+              "lt"     => Data::lt(args),
+              "le"     => Data::le(args),
+              "and"    => Data::and(args),
+              "or"     => Data::or(args),
+              "not"    => Data::not(args),
+              "xor"    => Data::xor(args),
+              "atom"   => Data::atom(args),
+              "if"     => Data::_if(args),
               // utility function
-              "car"   => Data::car(args),
-              "cdr"   => Data::cdr(args),
-              "cons"  => Data::cons(args),
+              "car"    => Data::car(args),
+              "cdr"    => Data::cdr(args),
+              "cons"   => Data::cons(args),
               // special form
-              // "lambda" => {
-
-              // },
-              // "define" => {
-
-              // },
-              _       => Err(InterpreterError::new(InterpreterErrorKind::CarNotApplicable, expr.loc)),
+              "lambda" => Data::lambda(args),
+              "define" => Data::define(self, args),
+              _        => Err(InterpreterError::car_not_applicable(expr.loc)),
             }
           },
-          _ => Err(InterpreterError::new(InterpreterErrorKind::CarNotApplicable, expr.loc)),
+          _ => Err(InterpreterError::car_not_applicable(expr.loc)),
         }
       }
       Quote { q } => Ok(quote(&q, expr.loc)),
@@ -89,6 +94,18 @@ impl InterpreterError {
   pub fn show_diagnostic(&self, input: &str) {
     eprintln!("{}", self);
     print_annot(input, self.loc);
+  }
+  pub fn invalid_arguments(loc: Loc) -> Self {
+    Self::new(InterpreterErrorKind::InvalidArguments, loc)
+  }
+  pub fn division_by_zero(loc: Loc) -> Self {
+    Self::new(InterpreterErrorKind::DivisionByZero, loc)
+  }
+  pub fn car_not_applicable(loc: Loc) -> Self {
+    Self::new(InterpreterErrorKind::CarNotApplicable, loc)
+  }
+  pub fn symbol_not_found(loc: Loc) -> Self {
+    Self::new(InterpreterErrorKind::SymbolNotFound, loc)
   }
 }
 

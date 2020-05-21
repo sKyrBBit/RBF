@@ -89,6 +89,7 @@ impl fmt::Display for InterpreterError {
       InvalidArguments => write!(f, "invalid arguments"),
       DivisionByZero   => write!(f, "division by zero"),
       CarNotApplicable => write!(f, "car not applicable"),
+      SymbolNotFound   => write!(f, "symbol not found"),
     }
   }
 }

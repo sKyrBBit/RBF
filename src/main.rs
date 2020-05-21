@@ -146,4 +146,20 @@ use rlisp::interpreter::Interpreter;
     _interpret("(if false a b)", &mut interpreter);
     _interpret("(if false & |)", &mut interpreter);
   }
+  #[test]
+  fn lambda() {
+    let mut interpreter = Interpreter::new();
+    _interpret("(lambda () 1)", &mut interpreter);
+    _interpret("(lambda () true)", &mut interpreter);
+    _interpret("(lambda () a)", &mut interpreter);
+    _interpret("(lambda () !)", &mut interpreter);
+  }
+  #[test]
+  fn define() {
+    let mut interpreter = Interpreter::new();
+    _interpret("(define p 1)", &mut interpreter);
+    _interpret("(define q true)", &mut interpreter);
+    _interpret("(define r a)", &mut interpreter);
+    _interpret("(define s !)", &mut interpreter);
+  }
 }
