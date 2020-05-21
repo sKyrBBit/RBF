@@ -6,6 +6,7 @@ pub enum OpKind {
   Sub,
   Mul,
   Div,
+  Rem,
   Lt,
   Equal,
   Gt,
@@ -29,6 +30,9 @@ impl Op {
   }
   pub fn div(loc: Loc) -> Self {
     Self::new(OpKind::Div, loc)
+  }
+  pub fn rem(loc: Loc) -> Self {
+    Self::new(OpKind::Rem, loc)
   }
   pub fn lt(loc: Loc) -> Self {
     Self::new(OpKind::Lt, loc)

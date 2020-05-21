@@ -119,8 +119,31 @@ use rlisp::interpreter::Interpreter;
   #[test]
   fn application() {
     let mut interpreter = Interpreter::new();
-    _interpret("(+ 1 2)", &mut interpreter);
-    _interpret("(mul 2 3)", &mut interpreter);
+    _interpret("(+ 3 2)", &mut interpreter);
+    _interpret("(- 3 2)", &mut interpreter);
+    _interpret("(* 3 2)", &mut interpreter);
+    _interpret("(/ 3 2)", &mut interpreter);
+    _interpret("(% 3 2)", &mut interpreter);
+    _interpret("(< 1 0)", &mut interpreter);
+    _interpret("(= 1 0)", &mut interpreter);
+    _interpret("(> 1 0)", &mut interpreter);
+    _interpret("(& 1 0)", &mut interpreter);
+    _interpret("(| 1 0)", &mut interpreter);
+    _interpret("(! 1)", &mut interpreter);
+    _interpret("(& true false)", &mut interpreter);
+    _interpret("(| true false)", &mut interpreter);
+    _interpret("(! false)", &mut interpreter);
+    _interpret("(ge 3 2)", &mut interpreter);
+    _interpret("(le 3 2)", &mut interpreter);
+    _interpret("(ne 3 2)", &mut interpreter);
     _interpret("(+ 1 (* 2 3))", &mut interpreter);
+  }
+  #[test]
+  fn _if() {
+    let mut interpreter = Interpreter::new();
+    _interpret("(if true 1 2)", &mut interpreter);
+    _interpret("(if true true false)", &mut interpreter);
+    _interpret("(if false a b)", &mut interpreter);
+    _interpret("(if false & |)", &mut interpreter);
   }
 }

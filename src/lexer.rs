@@ -71,6 +71,9 @@ fn lex_asterisk(input: &[u8], start: usize) -> Result<(Token, usize), LexError> 
 fn lex_slash(input: &[u8], start: usize) -> Result<(Token, usize), LexError> {
   consume_byte(input, start, b'/').map(|(_, end)| (Token::slash(Loc(start, end)), end))
 }
+fn lex_percent(input: &[u8], start: usize) -> Result<(Token, usize), LexError> {
+  consume_byte(input, start, b'%').map(|(_, end)| (Token::percent(Loc(start, end)), end))
+}
 fn lex_less(input: &[u8], start: usize) -> Result<(Token, usize), LexError> {
   consume_byte(input, start, b'<').map(|(_, end)| (Token::less(Loc(start, end)), end))
 }
@@ -138,6 +141,7 @@ pub fn lex(input: &str) -> Result<Vec<Token>, LexError> {
       b'+' => lex_a_token!(lex_plus(input, pos)),
       b'-' => lex_a_token!(lex_minus(input, pos)),
       b'*' => lex_a_token!(lex_asterisk(input, pos)),
+      b'%' => lex_a_token!(lex_percent(input, pos)),
       b'/' => lex_a_token!(lex_slash(input, pos)),
       b'<' => lex_a_token!(lex_less(input, pos)),
       b'=' => lex_a_token!(lex_equal(input, pos)),

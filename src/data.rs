@@ -89,6 +89,17 @@ impl Data {
       Err(Annot::new(InvalidArguments, Loc(0, 1)))
     }
   }
+  pub fn rem(args: Vec<Data>) -> Result<Data, InterpreterError> {
+    if args.len() == 2 {
+      let loc = args[0].loc;
+      match (&args[0].value, &args[1].value) {
+        (Number(l), Number(r)) => Ok(Self::number(l % r, loc)),
+        _ => Err(Annot::new(InvalidArguments, loc)),
+      }
+    } else {
+      Err(Annot::new(InvalidArguments, Loc(0, 1)))
+    }
+  }
   pub fn gt(args: Vec<Data>) -> Result<Data, InterpreterError> {
     if args.len() == 2 {
       let loc = args[0].loc;
@@ -100,7 +111,18 @@ impl Data {
       Err(Annot::new(InvalidArguments, Loc(0, 1)))
     }
   }
-  pub fn equal(args: Vec<Data>) -> Result<Data, InterpreterError> {
+  pub fn ge(args: Vec<Data>) -> Result<Data, InterpreterError> {
+    if args.len() == 2 {
+      let loc = args[0].loc;
+      match (&args[0].value, &args[1].value) {
+        (Number(l), Number(r)) => Ok(Self::boolean(l >= r, loc)),
+        _ => Err(Annot::new(InvalidArguments, loc)),
+      }
+    } else {
+      Err(Annot::new(InvalidArguments, Loc(0, 1)))
+    }
+  }
+  pub fn eq(args: Vec<Data>) -> Result<Data, InterpreterError> {
     if args.len() == 2 {
       let loc = args[0].loc;
       match (&args[0].value, &args[1].value) {
@@ -114,11 +136,36 @@ impl Data {
       Err(Annot::new(InvalidArguments, Loc(0, 1)))
     }
   }
+  pub fn ne(args: Vec<Data>) -> Result<Data, InterpreterError> {
+    if args.len() == 2 {
+      let loc = args[0].loc;
+      match (&args[0].value, &args[1].value) {
+        (Number(l), Number(r)) => Ok(Self::boolean(l != r, loc)),
+        (Boolean(l), Boolean(r)) => Ok(Self::boolean(l != r, loc)),
+        (Nil, Nil) => Ok(Self::boolean(false, loc)),
+        (Nil, _) | (_, Nil) => Ok(Self::boolean(true, loc)),
+        _ => Err(Annot::new(InvalidArguments, loc)),
+      }
+    } else {
+      Err(Annot::new(InvalidArguments, Loc(0, 1)))
+    }
+  }
   pub fn lt(args: Vec<Data>) -> Result<Data, InterpreterError> {
     if args.len() == 2 {
       let loc = args[0].loc;
       match (&args[0].value, &args[1].value) {
         (Number(l), Number(r)) => Ok(Self::boolean(l < r, loc)),
+        _ => Err(Annot::new(InvalidArguments, loc)),
+      }
+    } else {
+      Err(Annot::new(InvalidArguments, Loc(0, 1)))
+    }
+  }
+  pub fn le(args: Vec<Data>) -> Result<Data, InterpreterError> {
+    if args.len() == 2 {
+      let loc = args[0].loc;
+      match (&args[0].value, &args[1].value) {
+        (Number(l), Number(r)) => Ok(Self::boolean(l <= r, loc)),
         _ => Err(Annot::new(InvalidArguments, loc)),
       }
     } else {
@@ -213,6 +260,19 @@ impl Data {
     if args.len() == 2 {
       let loc = args[0].loc;
       Ok(Data::pair(args[0].clone(), args[1].clone(), loc))
+    } else {
+      Err(Annot::new(InvalidArguments, Loc(0, 1)))
+    }
+  }
+  pub fn _if(args: Vec<Data>) -> Result<Data, InterpreterError> {
+    if args.len() == 3 {
+      let loc = args[0].loc;
+      match (&args[0].value, &args[1].value, &args[2].value) {
+        (Boolean(b), _, _) => {
+          if *b { Ok(args[1].clone()) } else { Ok(args[2].clone()) }
+        },
+        _ => Err(Annot::new(InvalidArguments, loc)),
+      }
     } else {
       Err(Annot::new(InvalidArguments, Loc(0, 1)))
     }

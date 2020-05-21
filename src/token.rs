@@ -8,6 +8,7 @@ pub enum TokenKind {
   Minus,
   Asterisk,
   Slash,
+  Percent,
   Less,
   Equal,
   Greater,
@@ -45,6 +46,9 @@ impl Token {
   }
   pub fn slash(loc: Loc) -> Self {
     Self::new(TokenKind::Slash, loc)
+  }
+  pub fn percent(loc: Loc) -> Self {
+    Self::new(TokenKind::Percent, loc)
   }
   pub fn less(loc: Loc) -> Self {
     Self::new(TokenKind::Less, loc)

@@ -23,40 +23,57 @@ impl Interpreter {
     use super::ast::AstKind::*;
     match &expr.value {
       Num(n) => Ok(Data::number(*n as i32, expr.loc)),
-      Sym(s) => Ok(Data::symbol(s, expr.loc)),
+      Sym(s) => {
+        match &**s {
+          // keyword
+          "true"  => Ok(Data::boolean(true, expr.loc)),
+          "false" => Ok(Data::boolean(false, expr.loc)),
+          "nil"   => Ok(Data::nil(expr.loc)),
+          _ => Ok(Data::symbol(s, expr.loc))
+        }
+      },
       Nil => Ok(Data::nil(expr.loc)),
       Op { ref op } => Ok(symbolize(&op.value, expr.loc)),
       Pair  { l, r } => {
         let car = self.eval(&l)?;
         use super::data::DataKind::*;
         match car.value {
-          Symbol(name) => {
+          Symbol(s) => {
             let args = vec_args(r.clone())?;
             let args = args.into_iter().map(|arg| self.eval(&arg))
               .filter(|arg| arg.is_ok())
               .map(|arg| arg.unwrap())
               .collect::<Vec<Data>>();
-            match &*name {
+            match &*s {
               // builtin function
               "add"   => Data::add(args),
               "sub"   => Data::sub(args),
               "mul"   => Data::mul(args),
               "div"   => Data::div(args),
+              "rem"   => Data::rem(args),
               "gt"    => Data::gt(args),
-              "equal" => Data::equal(args),
+              "ge"    => Data::ge(args),
+              "eq"    => Data::eq(args),
+              "ne"    => Data::ne(args),
               "lt"    => Data::lt(args),
+              "le"    => Data::le(args),
               "and"   => Data::and(args),
               "or"    => Data::or(args),
               "not"   => Data::not(args),
               "xor"   => Data::xor(args),
               "atom"  => Data::atom(args),
+              "if"    => Data::_if(args),
+              // utility function
               "car"   => Data::car(args),
               "cdr"   => Data::cdr(args),
-			        "cons"  => Data::cons(args),
-              // keyword
-              "true"  => Ok(Data::boolean(true, expr.loc)),
-              "false" => Ok(Data::boolean(false, expr.loc)),
-              "nil"   => Ok(Data::nil(expr.loc)),
+              "cons"  => Data::cons(args),
+              // special form
+              // "lambda" => {
+
+              // },
+              // "define" => {
+
+              // },
               _       => Err(InterpreterError::new(InterpreterErrorKind::CarNotApplicable, expr.loc)),
             }
           },
@@ -100,8 +117,9 @@ fn symbolize(kind: &OpKind, loc: Loc) -> Data {
     Sub    => Data::symbol("sub", loc),
     Mul    => Data::symbol("mul", loc),
     Div    => Data::symbol("div", loc),
+    Rem    => Data::symbol("rem", loc),
     Gt     => Data::symbol("gt", loc),
-    Equal  => Data::symbol("equal", loc),
+    Equal  => Data::symbol("eq", loc),
     Lt     => Data::symbol("lt", loc),
     And    => Data::symbol("and", loc),
     Or     => Data::symbol("or", loc),

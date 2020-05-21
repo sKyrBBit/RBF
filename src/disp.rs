@@ -17,15 +17,16 @@ impl fmt::Display for TokenKind {
       Minus => write!(f, "-"),
       Asterisk => write!(f, "*"),
       Slash => write!(f, "/"),
+      Percent => write!(f, "%"),
       Less => write!(f, "<"),
       Equal => write!(f, "="),
+      Greater => write!(f, ">"),
       And => write!(f, "&"),
       Or => write!(f, "|"),
       Not => write!(f, "!"),
       Xor => write!(f, "^"),
       Quote => write!(f, "'"),
       Dot => write!(f, "."),
-      Greater => write!(f, ">"),
       LParen => write!(f, "("),
       RParen => write!(f, ")"),
       // LBrace => write!(f, "{{"),
@@ -99,8 +100,8 @@ impl fmt::Display for Data {
       Number(n) => write!(f, "{}", n),
       Boolean(b) => write!(f, "{}", b),
       Nil => write!(f, "()"),
-	  Symbol(ref name) => write!(f, "{}", name),
-	  Pair(ref l, ref r) => write!(f, "({} . {})", l, r),
+      Symbol(ref s) => write!(f, "{}", s),
+      Pair(ref l, ref r) => write!(f, "({} . {})", l, r),
     }
   }
 }
