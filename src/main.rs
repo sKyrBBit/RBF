@@ -22,7 +22,7 @@ fn interpret(input: &str, interpreter: &mut Interpreter) {
     }
   };
   println!("{:?}", ast);
-  match interpreter.eval(&ast) {
+  match interpreter.eval(&Interpreter::ast2data(&ast)) {
     Ok(result) => println!("{}", result),
     Err(e) => {
       e.show_diagnostic(&input);
@@ -60,7 +60,7 @@ use rlisp::interpreter::Interpreter;
   fn _interpret(line: &str, interpreter: &mut Interpreter) {
     let ast = line.parse::<Ast>().unwrap();
     println!("{:?}", ast);
-    let result = interpreter.eval(&ast).unwrap();
+    let result = interpreter.eval(&Interpreter::ast2data(&ast)).unwrap();
     println!("{}", result)
   }
   // #[test]
@@ -73,12 +73,12 @@ use rlisp::interpreter::Interpreter;
     let mut interpreter = Interpreter::new();
     _interpret("1", &mut interpreter);
     _interpret("true", &mut interpreter);
-    _interpret("a", &mut interpreter);
-    _interpret("!", &mut interpreter);
+    _interpret("'a", &mut interpreter);
+    _interpret("'!", &mut interpreter);
     _interpret("(atom 1)", &mut interpreter);
     _interpret("(atom true)", &mut interpreter);
-    _interpret("(atom a)", &mut interpreter);
-    _interpret("(atom !)", &mut interpreter);
+    _interpret("(atom 'a)", &mut interpreter);
+    _interpret("(atom '!)", &mut interpreter);
   }
   #[test]
   fn quote() {
@@ -105,16 +105,16 @@ use rlisp::interpreter::Interpreter;
     _interpret("(cdr '(& . |))", &mut interpreter);
     _interpret("(cons 1 2)", &mut interpreter);
     _interpret("(cons true false)", &mut interpreter);
-    _interpret("(cons a b)", &mut interpreter);
-    _interpret("(cons & |)", &mut interpreter);
+    _interpret("(cons 'a 'b)", &mut interpreter);
+    _interpret("(cons '& '|)", &mut interpreter);
   }
   #[test]
   fn list() {
     let mut interpreter = Interpreter::new();
     _interpret("'(1 2 3)", &mut interpreter);
     _interpret("'(true false)", &mut interpreter);
-    _interpret("'(a b c d)", &mut interpreter);
-    _interpret("'(< = >)", &mut interpreter);
+    _interpret("'('a 'b 'c 'd)", &mut interpreter);
+    _interpret("'('< '= '>)", &mut interpreter);
   }
   #[test]
   fn application() {
@@ -136,6 +136,8 @@ use rlisp::interpreter::Interpreter;
     _interpret("(ge 3 2)", &mut interpreter);
     _interpret("(le 3 2)", &mut interpreter);
     _interpret("(ne 3 2)", &mut interpreter);
+    _interpret("(shl 3 2)", &mut interpreter);
+    _interpret("(shr 3 2)", &mut interpreter);
     _interpret("(+ 1 (* 2 3))", &mut interpreter);
   }
   #[test]
@@ -143,23 +145,32 @@ use rlisp::interpreter::Interpreter;
     let mut interpreter = Interpreter::new();
     _interpret("(if true 1 2)", &mut interpreter);
     _interpret("(if true true false)", &mut interpreter);
-    _interpret("(if false a b)", &mut interpreter);
-    _interpret("(if false & |)", &mut interpreter);
+    _interpret("(if false 'a 'b)", &mut interpreter);
+    _interpret("(if false '& '|)", &mut interpreter);
   }
   #[test]
   fn lambda() {
     let mut interpreter = Interpreter::new();
-    _interpret("(lambda () 1)", &mut interpreter);
-    _interpret("(lambda () true)", &mut interpreter);
-    _interpret("(lambda () a)", &mut interpreter);
-    _interpret("(lambda () !)", &mut interpreter);
+    _interpret("(lambda (a) 1)", &mut interpreter);
+    _interpret("(lambda (a) true)", &mut interpreter);
+    _interpret("(lambda (a) a)", &mut interpreter);
+    _interpret("(lambda (a) !)", &mut interpreter);
   }
   #[test]
   fn define() {
     let mut interpreter = Interpreter::new();
     _interpret("(define p 1)", &mut interpreter);
     _interpret("(define q true)", &mut interpreter);
-    _interpret("(define r a)", &mut interpreter);
-    _interpret("(define s !)", &mut interpreter);
+    _interpret("(define r 'a)", &mut interpreter);
+    _interpret("(define s '!)", &mut interpreter);
+    _interpret("(define t (lambda (n) n))", &mut interpreter);
+    _interpret("p", &mut interpreter);
+    _interpret("q", &mut interpreter);
+    _interpret("r", &mut interpreter);
+    _interpret("s", &mut interpreter);
+    _interpret("(t 1)", &mut interpreter);
+    _interpret("(t true)", &mut interpreter);
+    _interpret("(t 'a)", &mut interpreter);
+    _interpret("(t 1'!", &mut interpreter);
   }
 }

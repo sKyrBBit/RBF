@@ -90,10 +90,10 @@ impl StdError for InterpreterError {
   fn description(&self) -> &str {
     use super::interpreter::InterpreterErrorKind::*;
     match self.value {
-      InvalidArguments => "invalid arguments",
-      DivisionByZero   => "division by zero",
-      CarNotApplicable => "car not applicable",
-      SymbolNotFound   => "symbol not found",
+      InvalidArguments  => "invalid arguments",
+      DivisionByZero    => "division by zero",
+      CarNotApplicable  => "car not applicable",
+      SymbolNotFound(_) => "symbol not found",
     }
   }
 }

@@ -8,6 +8,7 @@ pub enum DataKind {
   Nil,
   Symbol(Box<str>),
   Pair(Box<Data>, Box<Data>),
+  _Fn(Vec<Box<str>>, Box<Data>),
 }
 
 pub type Data = Annot<DataKind>;
@@ -44,9 +45,16 @@ impl Data {
       loc,
     )
   }
+  pub fn _fn(args: Vec<Box<str>>, body: Data, loc: Loc) -> Self {
+    Data::new (
+      _Fn(args, Box::from(body)),
+      loc,
+    )
+  }
+
   pub fn add(args: Vec<Data>) -> Result<Data, InterpreterError> {
     if args.len() == 2 {
-      let loc = args[0].loc;
+      let loc = Loc::merge(&args[0].loc, &args[1].loc);
       match (&args[0].value, &args[1].value) {
         (Number(l), Number(r)) => Ok(Self::number(l + r, loc)),
         _ => Err(InterpreterError::invalid_arguments(loc)),
@@ -57,7 +65,7 @@ impl Data {
   }
   pub fn sub(args: Vec<Data>) -> Result<Data, InterpreterError> {
     if args.len() == 2 {
-      let loc = args[0].loc;
+      let loc = Loc::merge(&args[0].loc, &args[1].loc);
       match (&args[0].value, &args[1].value) {
         (Number(l), Number(r)) => Ok(Self::number(l - r, loc)),
         _ => Err(InterpreterError::invalid_arguments(loc)),
@@ -68,7 +76,7 @@ impl Data {
   }
   pub fn mul(args: Vec<Data>) -> Result<Data, InterpreterError> {
     if args.len() == 2 {
-      let loc = args[0].loc;
+      let loc = Loc::merge(&args[0].loc, &args[1].loc);
       match (&args[0].value, &args[1].value) {
         (Number(l), Number(r)) => Ok(Self::number(l * r, loc)),
         _ => Err(InterpreterError::invalid_arguments(loc)),
@@ -79,7 +87,7 @@ impl Data {
   }
   pub fn div(args: Vec<Data>) -> Result<Data, InterpreterError> {
     if args.len() == 2 {
-      let loc = args[0].loc;
+      let loc = Loc::merge(&args[0].loc, &args[1].loc);
       match (&args[0].value, &args[1].value) {
         (Number(l), Number(r)) => {
           if *r == 0 {
@@ -96,7 +104,7 @@ impl Data {
   }
   pub fn rem(args: Vec<Data>) -> Result<Data, InterpreterError> {
     if args.len() == 2 {
-      let loc = args[0].loc;
+      let loc = Loc::merge(&args[0].loc, &args[1].loc);
       match (&args[0].value, &args[1].value) {
         (Number(l), Number(r)) => {
           if *r == 0 {
@@ -113,7 +121,7 @@ impl Data {
   }
   pub fn gt(args: Vec<Data>) -> Result<Data, InterpreterError> {
     if args.len() == 2 {
-      let loc = args[0].loc;
+      let loc = Loc::merge(&args[0].loc, &args[1].loc);
       match (&args[0].value, &args[1].value) {
         (Number(l), Number(r)) => Ok(Self::boolean(l > r, loc)),
         _ => Err(InterpreterError::invalid_arguments(loc)),
@@ -124,7 +132,7 @@ impl Data {
   }
   pub fn ge(args: Vec<Data>) -> Result<Data, InterpreterError> {
     if args.len() == 2 {
-      let loc = args[0].loc;
+      let loc = Loc::merge(&args[0].loc, &args[1].loc);
       match (&args[0].value, &args[1].value) {
         (Number(l), Number(r)) => Ok(Self::boolean(l >= r, loc)),
         _ => Err(InterpreterError::invalid_arguments(loc)),
@@ -135,7 +143,7 @@ impl Data {
   }
   pub fn eq(args: Vec<Data>) -> Result<Data, InterpreterError> {
     if args.len() == 2 {
-      let loc = args[0].loc;
+      let loc = Loc::merge(&args[0].loc, &args[1].loc);
       match (&args[0].value, &args[1].value) {
         (Number(l), Number(r)) => Ok(Self::boolean(l == r, loc)),
         (Boolean(l), Boolean(r)) => Ok(Self::boolean(l == r, loc)),
@@ -149,7 +157,7 @@ impl Data {
   }
   pub fn ne(args: Vec<Data>) -> Result<Data, InterpreterError> {
     if args.len() == 2 {
-      let loc = args[0].loc;
+      let loc = Loc::merge(&args[0].loc, &args[1].loc);
       match (&args[0].value, &args[1].value) {
         (Number(l), Number(r)) => Ok(Self::boolean(l != r, loc)),
         (Boolean(l), Boolean(r)) => Ok(Self::boolean(l != r, loc)),
@@ -163,7 +171,7 @@ impl Data {
   }
   pub fn lt(args: Vec<Data>) -> Result<Data, InterpreterError> {
     if args.len() == 2 {
-      let loc = args[0].loc;
+      let loc = Loc::merge(&args[0].loc, &args[1].loc);
       match (&args[0].value, &args[1].value) {
         (Number(l), Number(r)) => Ok(Self::boolean(l < r, loc)),
         _ => Err(InterpreterError::invalid_arguments(loc)),
@@ -174,7 +182,7 @@ impl Data {
   }
   pub fn le(args: Vec<Data>) -> Result<Data, InterpreterError> {
     if args.len() == 2 {
-      let loc = args[0].loc;
+      let loc = Loc::merge(&args[0].loc, &args[1].loc);
       match (&args[0].value, &args[1].value) {
         (Number(l), Number(r)) => Ok(Self::boolean(l <= r, loc)),
         _ => Err(InterpreterError::invalid_arguments(loc)),
@@ -185,7 +193,7 @@ impl Data {
   }
   pub fn and(args: Vec<Data>) -> Result<Data, InterpreterError> {
     if args.len() == 2 {
-      let loc = args[0].loc;
+      let loc = Loc::merge(&args[0].loc, &args[1].loc);
       match (&args[0].value, &args[1].value) {
         (Number(l), Number(r)) => Ok(Self::number(l & r, loc)),
         (Boolean(l), Boolean(r)) => Ok(Self::boolean(l & r, loc)),
@@ -197,7 +205,7 @@ impl Data {
   }
   pub fn or(args: Vec<Data>) -> Result<Data, InterpreterError> {
     if args.len() == 2 {
-      let loc = args[0].loc;
+      let loc = Loc::merge(&args[0].loc, &args[1].loc);
       match (&args[0].value, &args[1].value) {
         (Number(l), Number(r)) => Ok(Self::number(l | r, loc)),
         (Boolean(l), Boolean(r)) => Ok(Self::boolean(l | r, loc)),
@@ -221,10 +229,32 @@ impl Data {
   }
   pub fn xor(args: Vec<Data>) -> Result<Data, InterpreterError> {
     if args.len() == 2 {
-      let loc = args[0].loc;
+      let loc = Loc::merge(&args[0].loc, &args[1].loc);
       match (&args[0].value, &args[1].value) {
         (Number(l), Number(r)) => Ok(Self::number(l ^ r, loc)),
         (Boolean(l), Boolean(r)) => Ok(Self::boolean(l ^ r, loc)),
+        _ => Err(InterpreterError::invalid_arguments(loc)),
+      }
+    } else {
+      Err(InterpreterError::invalid_arguments(Loc(0, 1)))
+    }
+  }
+  pub fn shl(args: Vec<Data>) -> Result<Data, InterpreterError> {
+    if args.len() == 2 {
+      let loc = Loc::merge(&args[0].loc, &args[1].loc);
+      match (&args[0].value, &args[1].value) {
+        (Number(l), Number(r)) => Ok(Self::number(l << r, loc)),
+        _ => Err(InterpreterError::invalid_arguments(loc)),
+      }
+    } else {
+      Err(InterpreterError::invalid_arguments(Loc(0, 1)))
+    }
+  }
+  pub fn shr(args: Vec<Data>) -> Result<Data, InterpreterError> {
+    if args.len() == 2 {
+      let loc = Loc::merge(&args[0].loc, &args[1].loc);
+      match (&args[0].value, &args[1].value) {
+        (Number(l), Number(r)) => Ok(Self::number(l >> r, loc)),
         _ => Err(InterpreterError::invalid_arguments(loc)),
       }
     } else {
@@ -269,7 +299,7 @@ impl Data {
   }
   pub fn cons(args: Vec<Data>) -> Result<Data, InterpreterError> {
     if args.len() == 2 {
-      let loc = args[0].loc;
+      let loc = Loc::merge(&args[0].loc, &args[1].loc);
       Ok(Data::pair(args[0].clone(), args[1].clone(), loc))
     } else {
       Err(InterpreterError::invalid_arguments(Loc(0, 1)))
@@ -277,7 +307,7 @@ impl Data {
   }
   pub fn _if(args: Vec<Data>) -> Result<Data, InterpreterError> {
     if args.len() == 3 {
-      let loc = args[0].loc;
+      let loc = Loc::merge(&Loc::merge(&args[0].loc, &args[1].loc), &args[2].loc);
       match (&args[0].value, &args[1].value, &args[2].value) {
         (Boolean(b), _, _) => if *b { Ok(args[1].clone()) } else { Ok(args[2].clone()) },
         _ => Err(InterpreterError::invalid_arguments(loc)),
@@ -286,15 +316,39 @@ impl Data {
       Err(InterpreterError::invalid_arguments(Loc(0, 1)))
     }
   }
-  pub fn lambda(args: Vec<Data>) -> Result<Data, InterpreterError> {
-    unimplemented!()
+  pub fn lambda(params: Vec<Data>) -> Result<Data, InterpreterError> {
+    if params.len() == 2 {
+      let loc = Loc::merge(&params[0].loc, &params[1].loc);
+      // unfold params
+      let mut args = &params[0];
+      let mut vec_args = Vec::with_capacity(4);
+      loop {
+        match &args.value {
+          Pair(l, r) => {
+            if let Symbol(s) = &l.value {
+              vec_args.push(s.clone());
+              args = &*r;
+            } else {
+              return Err(InterpreterError::invalid_arguments(loc))
+            }
+          }
+          Nil => {
+            return Ok(Data::_fn(vec_args, params[1].clone(), loc));
+          },
+          _ => return Err(InterpreterError::invalid_arguments(Loc(0, 1)))
+        }
+      }
+    } else {
+      Err(InterpreterError::invalid_arguments(Loc(0, 1)))
+    }
   }
-  pub fn define(interpreter: &mut Interpreter, args: Vec<Data>) -> Result<Data, InterpreterError> {
-    if args.len() == 2 {
-      let loc = args[0].loc;
-      match (&args[0].value, &args[1].value) {
+  pub fn define(interpreter: &mut Interpreter, params: Vec<Data>) -> Result<Data, InterpreterError> {
+    if params.len() == 2 {
+      let loc = Loc::merge(&params[0].loc, &params[1].loc);
+      match (&params[0].value, &params[1].value) {
         (Symbol(s), _) => {
-          interpreter.symbols.insert(s.clone(), args[1].clone());
+          let result = interpreter.eval(&params[1])?;
+          interpreter.symbols.insert(s.clone(), result);
           Ok(Self::nil(loc))
         },
         _ => Err(InterpreterError::invalid_arguments(loc)),
@@ -302,5 +356,23 @@ impl Data {
     } else {
       Err(InterpreterError::invalid_arguments(Loc(0, 1)))
     }
+  }
+  pub fn apply(interpreter: &mut Interpreter, _fn: Data, params: Vec<Data>) -> Result<Data, InterpreterError> {
+    interpreter.enclose();
+    let result = match _fn.value {
+      _Fn(args, body) => {
+        if params.len() == args.len() {
+          for i in 0..params.len() {
+            interpreter.symbols.insert(args[i].clone(), params[i].clone());
+          }
+          interpreter.eval(&*body)
+        } else {
+          Err(InterpreterError::invalid_arguments(Loc(0, 1)))
+        }
+      },
+      _ => Err(InterpreterError::car_not_applicable(_fn.loc))
+    };
+    interpreter.disclose().unwrap();
+    result
   }
 }

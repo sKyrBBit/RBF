@@ -86,10 +86,10 @@ impl fmt::Display for InterpreterError {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     use super::interpreter::InterpreterErrorKind::*;
     match self.value {
-      InvalidArguments => write!(f, "invalid arguments"),
-      DivisionByZero   => write!(f, "division by zero"),
-      CarNotApplicable => write!(f, "car not applicable"),
-      SymbolNotFound   => write!(f, "symbol not found"),
+      InvalidArguments      => write!(f, "invalid arguments"),
+      DivisionByZero        => write!(f, "division by zero"),
+      CarNotApplicable      => write!(f, "car not applicable"),
+      SymbolNotFound(ref s) => write!(f, "symbol ({}) not found", s),
     }
   }
 }
@@ -102,7 +102,8 @@ impl fmt::Display for Data {
       Boolean(b) => write!(f, "{}", b),
       Nil => write!(f, "()"),
       Symbol(ref s) => write!(f, "{}", s),
-      Pair(ref l, ref r) => write!(f, "({} . {})", l, r),
+	  Pair(ref l, ref r) => write!(f, "({} . {})", l, r),
+	  _Fn(ref args, ref body) => write!(f, "{:?} -> {{{}}}", args, body),
     }
   }
 }

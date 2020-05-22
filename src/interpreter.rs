@@ -1,11 +1,11 @@
 use super::{Loc, Annot};
 use super::ast::Ast;
 use super::data::Data;
+use super::symbols::Symbols;
 use super::error::print_annot;
-use std::collections::HashMap;
 
 pub struct Interpreter {
-  pub symbols: HashMap<Box<str>, Data>
+  pub symbols: Symbols
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -13,7 +13,7 @@ pub enum InterpreterErrorKind {
   InvalidArguments,
   DivisionByZero,
   CarNotApplicable,
-  SymbolNotFound,
+  SymbolNotFound(Box<str>),
 }
 
 pub type InterpreterError = Annot<InterpreterErrorKind>;
@@ -21,39 +21,62 @@ pub type InterpreterError = Annot<InterpreterErrorKind>;
 impl Interpreter {
   pub fn new() -> Self {
     Interpreter {
-      symbols: HashMap::with_capacity(32),
+      symbols: Symbols::new(),
+    }
+  }
+  pub fn enclose(&mut self) {
+    let symbols = std::mem::replace(&mut self.symbols, Symbols::new());
+    self.symbols.enclose(symbols);
+  }
+  pub fn disclose(&mut self) -> Option<()> {
+    let symbols = self.symbols.disclose();
+    self.symbols = symbols?;
+    Some(())
+  }
+  pub fn ast2data(expr: &Ast) -> Data {
+    use super::ast::AstKind::*;
+    match &expr.value {
+      Num(n)         => Data::number(*n as i32, expr.loc),
+      Sym(s)         => Data::symbol(s, expr.loc),
+      Nil            => Data::nil(expr.loc),
+      Op { ref op }  => symbolize(&op.value, expr.loc),
+      Pair  { l, r } => Data::pair(Self::ast2data(l), Self::ast2data(r), expr.loc),
+      Quote { q }    => Data::pair(Data::symbol(&Box::from("quote"), expr.loc), Self::ast2data(q), expr.loc),
     }
   }
 
-  pub fn eval(&mut self, expr: &Ast) -> Result<Data, InterpreterError> {
-    use super::ast::AstKind::*;
+  pub fn eval(&mut self, expr: &Data) -> Result<Data, InterpreterError> {
+    use super::data::DataKind::*;
     match &expr.value {
-      Num(n) => Ok(Data::number(*n as i32, expr.loc)),
-      Sym(s) => {
+      Number(_) | Boolean(_) => Ok(expr.clone()),
+      Symbol(s)  => {
         match &**s {
           // keyword
           "true"  => Ok(Data::boolean(true, expr.loc)),
           "false" => Ok(Data::boolean(false, expr.loc)),
           "nil"   => Ok(Data::nil(expr.loc)),
-          _       => Ok(self.symbols
+          _       => self.symbols
                        .get(s)
+                       .ok_or(InterpreterError::symbol_not_found(s.clone(), expr.loc))
                        .map(|d| d.clone())
-                       .unwrap_or(Data::symbol(s, expr.loc))),
         }
       },
       Nil => Ok(Data::nil(expr.loc)),
-      Op { ref op } => Ok(symbolize(&op.value, expr.loc)),
-      Pair  { l, r } => {
-        let car = self.eval(&l)?;
-        use super::data::DataKind::*;
-        match car.value {
+      Pair(l, r) => {
+        match &l.value {
           Symbol(s) => {
+            match &**s {
+              // special form
+              "quote"  => return Ok(*r.clone()),
+              "lambda" => return Data::lambda(vec_args(r.clone())?.into_iter().map(|param| *param).collect::<Vec<Data>>()),
+              "define" => return Data::define(self, vec_args(r.clone())?.into_iter().map(|param| *param).collect::<Vec<Data>>()),
+              _ => (),
+            }
             let args = vec_args(r.clone())?;
-            let args = args.into_iter().map(|arg| self.eval(&arg))
-              .filter(|arg| arg.is_ok())
-              .map(|arg| arg.unwrap())
-              .collect::<Vec<Data>>();
-            match &*s {
+            let args = args.into_iter()
+              .map(|arg| self.eval(&arg))
+              .collect::<Result<Vec<Data>, InterpreterError>>()?;
+            match &**s {
               // builtin function
               "add"    => Data::add(args),
               "sub"    => Data::sub(args),
@@ -70,22 +93,26 @@ impl Interpreter {
               "or"     => Data::or(args),
               "not"    => Data::not(args),
               "xor"    => Data::xor(args),
+              "shl"    => Data::shl(args),
+              "shr"    => Data::shr(args),
               "atom"   => Data::atom(args),
               "if"     => Data::_if(args),
               // utility function
               "car"    => Data::car(args),
               "cdr"    => Data::cdr(args),
               "cons"   => Data::cons(args),
-              // special form
-              "lambda" => Data::lambda(args),
-              "define" => Data::define(self, args),
-              _        => Err(InterpreterError::car_not_applicable(expr.loc)),
+              _        => {
+                let body = self.symbols
+                  .get(&s)
+                  .ok_or(InterpreterError::car_not_applicable(expr.loc))?.clone();
+                Data::apply(self, body, args)
+              },
             }
           },
-          _ => Err(InterpreterError::car_not_applicable(expr.loc)),
+          _ => Err(InterpreterError::car_not_applicable(l.loc)),
         }
-      }
-      Quote { q } => Ok(quote(&q, expr.loc)),
+      },
+      _ => unreachable!(),
     }
   }
 }
@@ -104,24 +131,25 @@ impl InterpreterError {
   pub fn car_not_applicable(loc: Loc) -> Self {
     Self::new(InterpreterErrorKind::CarNotApplicable, loc)
   }
-  pub fn symbol_not_found(loc: Loc) -> Self {
-    Self::new(InterpreterErrorKind::SymbolNotFound, loc)
+  pub fn symbol_not_found(s: Box<str>, loc: Loc) -> Self {
+    Self::new(InterpreterErrorKind::SymbolNotFound(s), loc)
   }
 }
 
-fn vec_args(args: Box<Ast>) -> Result<Vec<Box<Ast>>, InterpreterError>{
+fn vec_args(args: Box<Data>) -> Result<Vec<Box<Data>>, InterpreterError>{
   let mut args = args;
   let mut vec_args = Vec::with_capacity(4);
-  use super::ast::AstKind::*;
+  use super::data::DataKind::*;
   loop {
     match args.value {
-      Pair { l, r } => {
+      Pair(l, r) => {
         vec_args.push(l);
         args = r;
       }
-      _ => {
+      Nil => {
         return Ok(vec_args);
       },
+      _ => unreachable!(),
     }
   }
 }
@@ -142,19 +170,5 @@ fn symbolize(kind: &OpKind, loc: Loc) -> Data {
     Or     => Data::symbol("or", loc),
     Not    => Data::symbol("not", loc),
     Xor    => Data::symbol("xor", loc),
-  }
-}
-
-fn quote(ast: &Ast, loc: Loc) -> Data {
-  use super::ast::AstKind::*;
-  match ast.value {
-    Num(n)         => Data::number(n as i32, loc),
-    Sym(ref s)     => Data::symbol(&*s, loc),
-    Nil            => Data::nil(loc),
-    Op { ref op }  => symbolize(&op.value, loc),
-    Pair { ref l, ref r }  => {
-      Data::pair(quote(&l, l.loc), quote(&r, r.loc), loc)
-    },
-    Quote { ref q } => quote(&q, q.loc),
   }
 }
