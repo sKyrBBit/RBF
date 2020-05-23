@@ -24,10 +24,14 @@ where
     .and_then(|tok| match tok.value {
       // NUMBER
       TokenKind::Number(n) => Ok(Ast::num(n, tok.loc)),
+      // SYMBOL
+      TokenKind::Symbol(s) => Ok(Ast::sym(s, tok.loc)),
+      // OP
       TokenKind::Plus     => Ok(Ast::op(Op::add(tok.loc), tok.loc)),
       TokenKind::Minus    => Ok(Ast::op(Op::sub(tok.loc), tok.loc)),
       TokenKind::Asterisk => Ok(Ast::op(Op::mul(tok.loc), tok.loc)),
       TokenKind::Slash    => Ok(Ast::op(Op::div(tok.loc), tok.loc)),
+      TokenKind::Percent  => Ok(Ast::op(Op::rem(tok.loc), tok.loc)),
       TokenKind::Less     => Ok(Ast::op(Op::lt(tok.loc), tok.loc)),
       TokenKind::Equal    => Ok(Ast::op(Op::equal(tok.loc), tok.loc)),
       TokenKind::Greater  => Ok(Ast::op(Op::gt(tok.loc), tok.loc)),

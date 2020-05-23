@@ -11,20 +11,22 @@ impl fmt::Display for TokenKind {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     use self::TokenKind::*;
     match self {
-      Number(n) => n.fmt(f),
+      Number(n) => write!(f, "{}", n),
+      Symbol(s) => write!(f, "{}", s),
       Plus => write!(f, "+"),
       Minus => write!(f, "-"),
       Asterisk => write!(f, "*"),
       Slash => write!(f, "/"),
+      Percent => write!(f, "%"),
       Less => write!(f, "<"),
       Equal => write!(f, "="),
+      Greater => write!(f, ">"),
       And => write!(f, "&"),
       Or => write!(f, "|"),
       Not => write!(f, "!"),
       Xor => write!(f, "^"),
       Quote => write!(f, "'"),
       Dot => write!(f, "."),
-      Greater => write!(f, ">"),
       LParen => write!(f, "("),
       RParen => write!(f, ")"),
       // LBrace => write!(f, "{{"),
@@ -84,9 +86,10 @@ impl fmt::Display for InterpreterError {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     use super::interpreter::InterpreterErrorKind::*;
     match self.value {
-      InvalidArguments => write!(f, "invalid arguments"),
-      DivisionByZero   => write!(f, "division by zero"),
-      CarNotApplicable => write!(f, "car not applicable"),
+      InvalidArguments      => write!(f, "invalid arguments"),
+      DivisionByZero        => write!(f, "division by zero"),
+      CarNotApplicable      => write!(f, "car not applicable"),
+      SymbolNotFound(ref s) => write!(f, "symbol ({}) not found", s),
     }
   }
 }
@@ -95,10 +98,12 @@ impl fmt::Display for Data {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     use super::data::DataKind::*;
     match self.value {
-      Num(n) => write!(f, "{}", n),
+      Number(n) => write!(f, "{}", n),
       Boolean(b) => write!(f, "{}", b),
       Nil => write!(f, "()"),
-      Symbol(ref name) => write!(f, "{}", name),
+      Symbol(ref s) => write!(f, "{}", s),
+	  Pair(ref l, ref r) => write!(f, "({} . {})", l, r),
+	  _Fn(ref args, ref body) => write!(f, "{:?} -> {{{}}}", args, body),
     }
   }
 }

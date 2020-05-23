@@ -10,10 +10,10 @@ pub enum LexErrorKind {
 pub type LexError = Annot<LexErrorKind>;
 
 impl LexError {
-  pub fn invalid_char(c: char, loc: Loc) -> Self {
+  pub(crate) fn invalid_char(c: char, loc: Loc) -> Self {
     LexError::new(LexErrorKind::InvalidChar(c), loc)
   }
-  pub fn eof(loc: Loc) -> Self {
+  pub(crate) fn eof(loc: Loc) -> Self {
     LexError::new(LexErrorKind::Eof, loc)
   }
 }
@@ -50,6 +50,15 @@ fn lex_number(input: &[u8], pos: usize) -> Result<(Token, usize), LexError> {
     .unwrap();
   Ok((Token::number(n, Loc(start, end)), end))
 }
+fn lex_symbol(input: &[u8], pos: usize) -> Result<(Token, usize), LexError> {
+  use std::str::from_utf8;
+
+  let start = pos;
+  let end = recognize_many(input, start, |b| b"1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_".contains(&b));
+  let s = from_utf8(&input[start..end])
+    .unwrap();
+  Ok((Token::symbol(s, Loc(start, end)), end))
+}
 fn lex_plus(input: &[u8], start: usize) -> Result<(Token, usize), LexError> {
   consume_byte(input, start, b'+').map(|(_, end)| (Token::plus(Loc(start, end)), end))
 }
@@ -61,6 +70,9 @@ fn lex_asterisk(input: &[u8], start: usize) -> Result<(Token, usize), LexError> 
 }
 fn lex_slash(input: &[u8], start: usize) -> Result<(Token, usize), LexError> {
   consume_byte(input, start, b'/').map(|(_, end)| (Token::slash(Loc(start, end)), end))
+}
+fn lex_percent(input: &[u8], start: usize) -> Result<(Token, usize), LexError> {
+  consume_byte(input, start, b'%').map(|(_, end)| (Token::percent(Loc(start, end)), end))
 }
 fn lex_less(input: &[u8], start: usize) -> Result<(Token, usize), LexError> {
   consume_byte(input, start, b'<').map(|(_, end)| (Token::less(Loc(start, end)), end))
@@ -125,9 +137,11 @@ pub fn lex(input: &str) -> Result<Vec<Token>, LexError> {
   while pos < input.len() {
     match input[pos] {
       b'0'..=b'9' => lex_a_token!(lex_number(input, pos)),
+      b'a'..=b'z' | b'A'..=b'Z' => lex_a_token!(lex_symbol(input, pos)),
       b'+' => lex_a_token!(lex_plus(input, pos)),
       b'-' => lex_a_token!(lex_minus(input, pos)),
       b'*' => lex_a_token!(lex_asterisk(input, pos)),
+      b'%' => lex_a_token!(lex_percent(input, pos)),
       b'/' => lex_a_token!(lex_slash(input, pos)),
       b'<' => lex_a_token!(lex_less(input, pos)),
       b'=' => lex_a_token!(lex_equal(input, pos)),

@@ -1,12 +1,14 @@
 use super::{Loc, Annot};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum TokenKind {
   Number(u32),
+  Symbol(Box<str>),
   Plus,
   Minus,
   Asterisk,
   Slash,
+  Percent,
   Less,
   Equal,
   Greater,
@@ -30,6 +32,9 @@ impl Token {
   pub fn number(n: u32, loc: Loc) -> Self {
     Self::new(TokenKind::Number(n), loc)
   }
+  pub fn symbol(s: &str, loc: Loc) -> Self {
+    Self::new(TokenKind::Symbol(Box::from(s)), loc)
+  }
   pub fn plus(loc: Loc) -> Self {
     Self::new(TokenKind::Plus, loc)
   }
@@ -41,6 +46,9 @@ impl Token {
   }
   pub fn slash(loc: Loc) -> Self {
     Self::new(TokenKind::Slash, loc)
+  }
+  pub fn percent(loc: Loc) -> Self {
+    Self::new(TokenKind::Percent, loc)
   }
   pub fn less(loc: Loc) -> Self {
     Self::new(TokenKind::Less, loc)

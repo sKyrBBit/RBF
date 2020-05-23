@@ -49,7 +49,7 @@ impl StdError for Error {
   }
 }
 
-pub fn print_annot(input: &str, loc: Loc) {
+pub(crate) fn print_annot(input: &str, loc: Loc) {
   eprintln!("{}", input);
   eprintln!("{}{}", " ".repeat(loc.0), "^".repeat(loc.1 - loc.0));
 }
@@ -90,9 +90,10 @@ impl StdError for InterpreterError {
   fn description(&self) -> &str {
     use super::interpreter::InterpreterErrorKind::*;
     match self.value {
-      InvalidArguments => "invalid arguments",
-      DivisionByZero   => "division by zero",
-      CarNotApplicable => "car not applicable",
+      InvalidArguments  => "invalid arguments",
+      DivisionByZero    => "division by zero",
+      CarNotApplicable  => "car not applicable",
+      SymbolNotFound(_) => "symbol not found",
     }
   }
 }
