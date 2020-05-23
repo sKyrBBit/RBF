@@ -5,7 +5,7 @@ use super::symbols::Symbols;
 use super::error::print_annot;
 
 pub struct Interpreter {
-  pub symbols: Symbols
+  pub(crate) symbols: Symbols
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -24,11 +24,11 @@ impl Interpreter {
       symbols: Symbols::new(),
     }
   }
-  pub fn enclose(&mut self) {
+  pub(crate) fn enclose(&mut self) {
     let symbols = std::mem::replace(&mut self.symbols, Symbols::new());
     self.symbols.enclose(symbols);
   }
-  pub fn disclose(&mut self) -> Option<()> {
+  pub(crate) fn disclose(&mut self) -> Option<()> {
     let symbols = self.symbols.disclose();
     self.symbols = symbols?;
     Some(())
@@ -122,16 +122,16 @@ impl InterpreterError {
     eprintln!("{}", self);
     print_annot(input, self.loc);
   }
-  pub fn invalid_arguments(loc: Loc) -> Self {
+  pub(crate) fn invalid_arguments(loc: Loc) -> Self {
     Self::new(InterpreterErrorKind::InvalidArguments, loc)
   }
-  pub fn division_by_zero(loc: Loc) -> Self {
+  pub(crate) fn division_by_zero(loc: Loc) -> Self {
     Self::new(InterpreterErrorKind::DivisionByZero, loc)
   }
-  pub fn car_not_applicable(loc: Loc) -> Self {
+  pub(crate) fn car_not_applicable(loc: Loc) -> Self {
     Self::new(InterpreterErrorKind::CarNotApplicable, loc)
   }
-  pub fn symbol_not_found(s: Box<str>, loc: Loc) -> Self {
+  pub(crate) fn symbol_not_found(s: Box<str>, loc: Loc) -> Self {
     Self::new(InterpreterErrorKind::SymbolNotFound(s), loc)
   }
 }
