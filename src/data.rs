@@ -375,4 +375,7 @@ impl Data {
     interpreter.disclose().unwrap();
     result
   }
+  pub fn assert_eq(&self, other: DataKind) {
+    assert_eq!(self.value, other)
+  }
 }
